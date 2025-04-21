@@ -32,6 +32,7 @@ import (
 	"google.golang.org/api/logging/v2"
 	"google.golang.org/api/metastore/v1"
 	"google.golang.org/api/monitoring/v3"
+	"google.golang.org/api/notebooks/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/pubsub/v1"
 	run1 "google.golang.org/api/run/v1"
@@ -868,6 +869,46 @@ func VPCAccessService(ctx context.Context, d *plugin.QueryData) (*vpcaccess.Serv
 
 	// so it was not in cache - create service
 	svc, err := vpcaccess.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+func NotebookService(ctx context.Context, d *plugin.QueryData) (*notebooks.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "NotebooksService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*notebooks.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := notebooks.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+func GetProjectID(ctx context.Context, d *plugin.QueryData) (*compute.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "GetProjectID"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*compute.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := compute.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
