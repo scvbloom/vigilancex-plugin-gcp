@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"cloud.google.com/go/aiplatform/apiv1/aiplatformpb"
 	notebooks "cloud.google.com/go/notebooks/apiv1"
 	"cloud.google.com/go/notebooks/apiv1/notebookspb"
 	"github.com/turbot/go-kit/types"
@@ -114,23 +115,28 @@ func listNotebookInstances(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	region := d.EqualsQualString("location")
 	var location string
 	matrixLocation := d.EqualsQualString(matrixKeyLocation)
+	// Since, when the service API is disabled, matrixLocation value will be nil
 	if matrixLocation != "" {
 		location = matrixLocation
 	}
 
+	// Minimize API call as per given location
 	if region != "" && region != location {
-		logger.Warn("gcp_vertex_ai_notebook_instance.listNotebookInstances", "location", region, "matrixLocation", location)
+		logger.Warn("gcp_vertex_ai_notebook_instance.listAIPlatformModels", "location", region, "matrixLocation", location)
 		return nil, nil
 	}
 
+	// Get project details
+
 	projectId, err := getProject(ctx, d, h)
 	if err != nil {
-		logger.Error("gcp_vertex_ai_notebook_instance.listNotebookInstances", "cache_error", err)
+		logger.Error("gcp_vertex_ai_notebook_instance.listAIPlatformModels", "cache_error", err)
 		return nil, err
 	}
 
 	project := projectId.(string)
 
+	// Page size should be in range of [0, 100].
 	pageSize := types.Int64(100)
 	limit := d.QueryContext.Limit
 	if d.QueryContext.Limit != nil {
@@ -139,31 +145,34 @@ func listNotebookInstances(ctx context.Context, d *plugin.QueryData, h *plugin.H
 		}
 	}
 
-	client, err := notebooks.NewNotebookClient(ctx)
+	// Create Service Connection
+	service, err := AIService(ctx, d, "Model")
 	if err != nil {
-		logger.Error("gcp_vertex_ai_notebook_instance.listNotebookInstances", "client_creation_error", err)
+		logger.Error("gcp_vertex_ai_notebook_instance.listAIPlatformModels", "connection_error", err)
 		return nil, err
 	}
-	defer client.Close()
 
-	req := &notebookspb.ListInstancesRequest{
+	req := &aiplatformpb.ListModelsRequest{
 		Parent:   "projects/" + project + "/locations/" + location,
 		PageSize: int32(*pageSize),
 	}
 
-	it := client.ListInstances(ctx, req)
+	it := service.Model.ListModels(ctx, req)
 
 	for {
-		instance, err := it.Next()
-		if err == iterator.Done {
-			break
-		}
+		model, err := it.Next()
 		if err != nil {
-			logger.Error("gcp_vertex_ai_notebook_instance.listNotebookInstances", "api_error", err)
+			if strings.Contains(err.Error(), "404") {
+				return nil, nil
+			}
+			if err == iterator.Done {
+				break
+			}
+			logger.Error("gcp_vertex_ai_notebook_instance.listAIPlatformModels", err)
 			return nil, err
 		}
 
-		d.StreamListItem(ctx, instance)
+		d.StreamListItem(ctx, model)
 
 		if d.RowsRemaining(ctx) == 0 {
 			break
