@@ -189,6 +189,9 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"gcp_vpc_access_connector":                                tableGcpVPCAccessConnector(ctx),
 			"gcp_vertex_ai_notebook_instance":                         tableGcpVertexAINotebookInstance(ctx),
 			"gcp_filestore_instance":                                  tableGcpFilestoreInstance(ctx),
+			//"gcp_security_center_findings":                            tableGcpSecurityCenterFindings(ctx),
+			"gcp_workstation_cluster_configuration": tableGcpWorkstationClusterConfiguration(ctx),
+			"gcp_datastream_stream":                 tableGcpDatastreamStream(ctx),
 			/*
 				https://github.com/turbot/steampipe/issues/108
 				"gcp_compute_route":                   tableGcpComputeRoute(ctx),
