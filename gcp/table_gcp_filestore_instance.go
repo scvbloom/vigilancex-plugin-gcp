@@ -23,7 +23,7 @@ func tableGcpFilestoreInstance(ctx context.Context) *plugin.Table {
 			Hydrate:           listFilestoreInstances,
 			ShouldIgnoreError: isIgnorableError([]string{"PERMISSION_DENIED"}),
 		},
-		GetMatrixItemFunc: BuildLocationList,
+		GetMatrixItemFunc: BuildFilestoreLocationList,
 		Columns: []*plugin.Column{
 			{
 				Name:        "name",
@@ -140,10 +140,10 @@ func listFilestoreInstances(ctx context.Context, d *plugin.QueryData, h *plugin.
 		logger.Error("gcp_filestore_instance.listFilestoreInstances", "connection_error", err)
 		return nil, err
 	}
-	loc := d.EqualsQuals["location"].GetStringValue()
+	//loc := d.EqualsQuals["location"].GetStringValue()
 
 	// List Filestore instances
-	req := service.Projects.Locations.Instances.List("projects/" + project + "/locations/" + loc)
+	req := service.Projects.Locations.Instances.List("projects/" + project + "/locations/" + location)
 	err = req.Pages(ctx, func(page *file.ListInstancesResponse) error {
 		for _, instance := range page.Instances {
 			d.StreamListItem(ctx, instance)
@@ -209,10 +209,10 @@ func getFilestoreInstance(ctx context.Context, d *plugin.QueryData, h *plugin.Hy
 		return nil, err
 	}
 
-	loc := d.EqualsQuals["location"].GetStringValue()
+	//loc := d.EqualsQuals["location"].GetStringValue()
 
 	// Get Filestore instance
-	req := service.Projects.Locations.Instances.Get("projects/" + project + "/locations/" + loc + "/instances/" + name)
+	req := service.Projects.Locations.Instances.Get("projects/" + project + "/locations/" + location + "/instances/" + name)
 	instance, err := req.Do()
 	if err != nil {
 		logger.Error("gcp_filestore_instance.getFilestoreInstance", "api_error", err)
