@@ -28,6 +28,7 @@ import (
 	"google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/dns/v1"
 	"google.golang.org/api/essentialcontacts/v1"
+	"google.golang.org/api/file/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/logging/v2"
 	"google.golang.org/api/metastore/v1"
@@ -913,6 +914,23 @@ func GetProjectID(ctx context.Context, d *plugin.QueryData) (*compute.Service, e
 		return nil, err
 	}
 
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+func FilestoreService(ctx context.Context, d *plugin.QueryData) (*file.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "FilestoreService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*file.Service), nil
+	}
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+	// so it was not in cache - create service
+	svc, err := file.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
 	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
 	return svc, nil
 }
