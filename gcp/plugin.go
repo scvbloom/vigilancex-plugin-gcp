@@ -82,6 +82,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"gcp_bigquery_job":                                        tableGcpBigQueryJob(ctx),
 			"gcp_bigquery_table":                                      tableGcpBigqueryTable(ctx),
 			"gcp_bigtable_instance":                                   tableGcpBigtableInstance(ctx),
+			"gcp_bigtable_cluster":                                    tableGcpBigtableCluster(ctx),
 			"gcp_billing_account":                                     tableGcpBillingAccount(ctx),
 			"gcp_billing_budget":                                      tableGcpBillingBudget(ctx),
 			"gcp_cloud_asset":                                         tableGcpCloudAsset(ctx),
