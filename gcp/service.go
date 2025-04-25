@@ -17,13 +17,16 @@ import (
 	"google.golang.org/api/billingbudgets/v1"
 	"google.golang.org/api/cloudasset/v1"
 	"google.golang.org/api/cloudbilling/v1"
+	"google.golang.org/api/cloudbuild/v1"
 	"google.golang.org/api/cloudfunctions/v2"
 	"google.golang.org/api/cloudidentity/v1"
 	"google.golang.org/api/cloudkms/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudtrace/v1"
 	"google.golang.org/api/composer/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
+	"google.golang.org/api/datafusion/v1"
 	"google.golang.org/api/dataplex/v1"
 	"google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/datastream/v1"
@@ -1015,6 +1018,69 @@ func DatastreamService(ctx context.Context, d *plugin.QueryData) (*datastream.Se
 
 	// so it was not in cache - create service
 	svc, err := datastream.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// CloudTraceService returns the service connection for GCP Cloud Trace service
+func CloudTraceService(ctx context.Context, d *plugin.QueryData) (*cloudtrace.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "CloudTraceService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*cloudtrace.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := cloudtrace.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// DataFusionService returns the service connection for GCP Data Fusion service
+func DataFusionService(ctx context.Context, d *plugin.QueryData) (*datafusion.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "DataFusionService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*datafusion.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := datafusion.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// CloudBuildService returns the service connection for GCP Cloud Build service
+func CloudBuildService(ctx context.Context, d *plugin.QueryData) (*cloudbuild.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "CloudBuildService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*cloudbuild.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := cloudbuild.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
