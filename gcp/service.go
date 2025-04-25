@@ -17,6 +17,7 @@ import (
 	"google.golang.org/api/billingbudgets/v1"
 	"google.golang.org/api/cloudasset/v1"
 	"google.golang.org/api/cloudbilling/v1"
+	"google.golang.org/api/cloudbuild/v2"
 	"google.golang.org/api/cloudfunctions/v2"
 	"google.golang.org/api/cloudidentity/v1"
 	"google.golang.org/api/cloudkms/v1"
@@ -868,6 +869,27 @@ func VPCAccessService(ctx context.Context, d *plugin.QueryData) (*vpcaccess.Serv
 
 	// so it was not in cache - create service
 	svc, err := vpcaccess.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// CloudBuildService returns the service connection for GCP Cloud Build service
+func CloudBuildService(ctx context.Context, d *plugin.QueryData) (*cloudbuild.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "CloudBuildService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*cloudbuild.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := cloudbuild.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
