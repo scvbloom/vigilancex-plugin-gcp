@@ -197,6 +197,10 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"gcp_cloud_data_fusion_instance":                          tableGcpCloudDataFusionInstance(ctx),
 			"gcp_cloud_workstation_config":                            tableGcpCloudWorkstationConfig(ctx),
 			"gcp_cloud_build_triggers":                                tableGcpCloudBuildTriggers(ctx),
+			"gcp_datastream_private_connection":                       tableGcpDatastreamPrivateConnection(ctx),
+			"gcp_datastream_connection_profile":                       tableGcpDatastreamConnectionProfile(ctx),
+			//"gcp_security_center_findings":                          tableGcpSecurityCenterFindings(ctx),
+
 			/*
 				https://github.com/turbot/steampipe/issues/108
 				"gcp_compute_route":                   tableGcpComputeRoute(ctx),
