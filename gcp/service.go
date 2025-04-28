@@ -9,6 +9,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"google.golang.org/api/accessapproval/v1"
 	"google.golang.org/api/alloydb/v1"
+	"google.golang.org/api/apigee/v1"
 	"google.golang.org/api/apikeys/v2"
 	"google.golang.org/api/appengine/v1"
 	"google.golang.org/api/artifactregistry/v1"
@@ -1085,6 +1086,24 @@ func CloudBuildService(ctx context.Context, d *plugin.QueryData) (*cloudbuild.Se
 		return nil, err
 	}
 
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// ApigeeService returns the service connection for GCP Apigee service
+func ApigeeService(ctx context.Context, d *plugin.QueryData) (*apigee.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "ApigeeService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*apigee.Service), nil
+	}
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+	// so it was not in cache - create service
+	svc, err := apigee.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
 	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
 	return svc, nil
 }

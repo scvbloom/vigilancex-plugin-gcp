@@ -199,6 +199,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"gcp_cloud_build_triggers":                                tableGcpCloudBuildTriggers(ctx),
 			"gcp_datastream_private_connection":                       tableGcpDatastreamPrivateConnection(ctx),
 			"gcp_datastream_connection_profile":                       tableGcpDatastreamConnectionProfile(ctx),
+			"gcp_apigee_api":                                          tableGcpApigeeApi(ctx),
 			//"gcp_security_center_findings":                          tableGcpSecurityCenterFindings(ctx),
 
 			/*
