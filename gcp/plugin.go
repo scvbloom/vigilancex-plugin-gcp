@@ -200,8 +200,8 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"gcp_datastream_private_connection":                       tableGcpDatastreamPrivateConnection(ctx),
 			"gcp_datastream_connection_profile":                       tableGcpDatastreamConnectionProfile(ctx),
 			"gcp_apigee_api":                                          tableGcpApigeeApi(ctx),
-			//"gcp_security_center_findings":                          tableGcpSecurityCenterFindings(ctx),
-
+			"gcp_certificate_authority_service":                       tableGcpCertificateAuthorityService(ctx),
+			"gcp_workstation_cluster":                                 tableGcpWorkstationCluster(ctx),
 			/*
 				https://github.com/turbot/steampipe/issues/108
 				"gcp_compute_route":                   tableGcpComputeRoute(ctx),

@@ -41,6 +41,7 @@ import (
 	"google.golang.org/api/monitoring/v3"
 	"google.golang.org/api/notebooks/v1"
 	"google.golang.org/api/option"
+	"google.golang.org/api/privateca/v1"
 	"google.golang.org/api/pubsub/v1"
 	run1 "google.golang.org/api/run/v1"
 	"google.golang.org/api/run/v2"
@@ -1104,6 +1105,27 @@ func ApigeeService(ctx context.Context, d *plugin.QueryData) (*apigee.Service, e
 	if err != nil {
 		return nil, err
 	}
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// PrivateCAService returns the service connection for GCP Certificate Authority (Private CA) service
+func PrivateCAService(ctx context.Context, d *plugin.QueryData) (*privateca.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "PrivateCAService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*privateca.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := privateca.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
 	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
 	return svc, nil
 }

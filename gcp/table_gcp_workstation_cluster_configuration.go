@@ -16,6 +16,7 @@ func tableGcpWorkstationClusterConfiguration(ctx context.Context) *plugin.Table 
 		List: &plugin.ListConfig{
 			Hydrate: listWorkstationClusterConfigurations,
 		},
+		GetMatrixItemFunc: BuildCloudWorkstationLocationList,
 		Columns: []*plugin.Column{
 			{
 				Name:        "name",
@@ -170,15 +171,30 @@ func tableGcpWorkstationClusterConfiguration(ctx context.Context) *plugin.Table 
 func listWorkstationClusterConfigurations(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	logger := plugin.Logger(ctx)
 
-	// Get the parent from the query qualifiers
-	parent := d.EqualsQualString("parent")
-	if parent == "" {
-		logger.Error("gcp_workstation_cluster_configuration.listWorkstationClusterConfigurations", "missing_parent", "The parent qualifier is required.")
-		return nil, nil
+	// Get project details
+	projectData, err := activeProject(ctx, d)
+	if err != nil {
+		logger.Error("gcp_workstation_cluster.listWorkstationClusters", "project_error", err)
+		return nil, err
+	}
+	project := projectData.Project
+
+	// Get location from matrix or default to "us-central1"
+	location := d.EqualsQualString("location")
+	if location == "" {
+		matrixLocation := d.EqualsQualString(matrixKeyLocation)
+		if matrixLocation != "" {
+			location = matrixLocation
+		} else {
+			location = "us-central1" // Default location
+		}
 	}
 
+	// Construct the parent path
+	parent := "projects/" + project + "/locations/" + location
+
 	// Log the parent for debugging
-	logger.Debug("gcp_workstation_cluster_configuration.listWorkstationClusterConfigurations", "parent", parent)
+	logger.Debug("gcp_workstation_cluster.listWorkstationClusters", "parent", parent)
 
 	// Create Service Connection
 	service, err := WorkstationsService(ctx, d)

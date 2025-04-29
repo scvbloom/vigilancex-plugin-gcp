@@ -18,14 +18,14 @@ func tableGcpCloudBuildTriggers(ctx context.Context) *plugin.Table {
 		},
 		Columns: []*plugin.Column{
 			{
-				Name:        "id",
-				Type:        proto.ColumnType_STRING,
-				Description: "The unique identifier of the build trigger.",
-			},
-			{
 				Name:        "name",
 				Type:        proto.ColumnType_STRING,
 				Description: "The name of the build trigger.",
+			},
+			{
+				Name:        "id",
+				Type:        proto.ColumnType_STRING,
+				Description: "The unique identifier of the build trigger.",
 			},
 			{
 				Name:        "description",
@@ -55,77 +55,22 @@ func tableGcpCloudBuildTriggers(ctx context.Context) *plugin.Table {
 			{
 				Name:        "github",
 				Type:        proto.ColumnType_JSON,
-				Description: "The GitHub events configuration.",
+				Description: "The GitHub configuration for the build trigger.",
 			},
 			{
 				Name:        "pubsub_config",
 				Type:        proto.ColumnType_JSON,
-				Description: "The Pub/Sub configuration.",
+				Description: "The Pub/Sub configuration for the build trigger.",
 			},
 			{
 				Name:        "webhook_config",
 				Type:        proto.ColumnType_JSON,
-				Description: "The webhook configuration.",
+				Description: "The webhook configuration for the build trigger.",
 			},
 			{
-				Name:        "bitbucket_server_trigger_config",
+				Name:        "labels",
 				Type:        proto.ColumnType_JSON,
-				Description: "The Bitbucket Server trigger configuration.",
-			},
-			{
-				Name:        "gitlab_enterprise_events_config",
-				Type:        proto.ColumnType_JSON,
-				Description: "The GitLab Enterprise events configuration.",
-			},
-			{
-				Name:        "substitutions",
-				Type:        proto.ColumnType_JSON,
-				Description: "Substitutions for the build trigger.",
-			},
-			{
-				Name:        "ignored_files",
-				Type:        proto.ColumnType_JSON,
-				Description: "Files to ignore when triggering builds.",
-			},
-			{
-				Name:        "included_files",
-				Type:        proto.ColumnType_JSON,
-				Description: "Files to include when triggering builds.",
-			},
-			{
-				Name:        "source_to_build",
-				Type:        proto.ColumnType_JSON,
-				Description: "The source to build configuration.",
-			},
-			{
-				Name:        "approval_config",
-				Type:        proto.ColumnType_JSON,
-				Description: "The approval configuration for the build trigger.",
-			},
-			{
-				Name:        "filter",
-				Type:        proto.ColumnType_STRING,
-				Description: "The filter for the build trigger.",
-			},
-			{
-				Name:        "service_account",
-				Type:        proto.ColumnType_STRING,
-				Description: "The service account used for the build trigger.",
-			},
-			{
-				Name:        "event_type",
-				Type:        proto.ColumnType_STRING,
-				Description: "The event type for the build trigger.",
-			},
-			{
-				Name:        "include_build_logs",
-				Type:        proto.ColumnType_STRING,
-				Description: "Specifies whether to include build logs in the build trigger.",
-			},
-			{
-				Name:        "repository_event_config",
-				Type:        proto.ColumnType_JSON,
-				Description: "The repository event configuration.",
+				Description: "Labels associated with the build trigger.",
 			},
 			// Standard Steampipe columns
 			{
@@ -133,12 +78,6 @@ func tableGcpCloudBuildTriggers(ctx context.Context) *plugin.Table {
 				Description: ColumnDescriptionTitle,
 				Type:        proto.ColumnType_STRING,
 				Transform:   transform.FromField("Name"),
-			},
-			{
-				Name:        "tags",
-				Description: ColumnDescriptionTags,
-				Type:        proto.ColumnType_JSON,
-				Transform:   transform.FromField("Tags"),
 			},
 			{
 				Name:        "akas",
@@ -213,7 +152,7 @@ func listCloudBuildTriggers(ctx context.Context, d *plugin.QueryData, h *plugin.
 func gcpCloudBuildTriggersTurbotData(ctx context.Context, d *transform.TransformData) (interface{}, error) {
 	param := d.Param.(string)
 	trigger := d.HydrateItem.(*cloudbuild.BuildTrigger)
-	akas := []string{"gcp://cloudbuild.googleapis.com/" + trigger.ResourceName}
+	akas := []string{"gcp://cloudbuild.googleapis.com/" + trigger.Name}
 
 	turbotData := map[string]interface{}{
 		"Akas": akas,
