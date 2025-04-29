@@ -33,6 +33,7 @@ import (
 	"google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/datastream/v1"
 	"google.golang.org/api/dns/v1"
+	"google.golang.org/api/documentai/v1"
 	"google.golang.org/api/essentialcontacts/v1"
 	"google.golang.org/api/file/v1"
 	"google.golang.org/api/firestore/v1"
@@ -1145,6 +1146,35 @@ func DataflowService(ctx context.Context, d *plugin.QueryData) (*dataflow.Servic
 
 	// so it was not in cache - create service
 	svc, err := dataflow.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+
+// DocumentAIService returns the service connection for GCP Document AI service
+// It may require specifying regional endpoints when creating the service client as shown in:
+// https://pkg.go.dev/cloud.google.com/go#hdr-Client_Options
+func DocumentAIService(ctx context.Context, d *plugin.QueryData) (*documentai.Service, error) {
+	// have we already created and cached the service?
+	matrixLocation := d.EqualsQualString(matrixKeyLocation)
+
+	serviceCacheKey := "DocumentAIService" + matrixLocation 
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*documentai.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+	if matrixLocation != "" {
+		opts = append(opts, option.WithEndpoint(matrixLocation+"-documentai.googleapis.com:443"))
+		plugin.Logger(ctx).Error("BuildingDocumentAIService", matrixLocation+"-documentai.googleapis.com:443")
+	}
+	// so it was not in cache - create service
+	svc, err := documentai.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
