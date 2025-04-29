@@ -28,6 +28,7 @@ import (
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
 	"google.golang.org/api/datafusion/v1"
+	dataflow "google.golang.org/api/dataflow/v1b3"
 	"google.golang.org/api/dataplex/v1"
 	"google.golang.org/api/dataproc/v1"
 	"google.golang.org/api/datastream/v1"
@@ -1122,6 +1123,28 @@ func PrivateCAService(ctx context.Context, d *plugin.QueryData) (*privateca.Serv
 
 	// so it was not in cache - create service
 	svc, err := privateca.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+
+// DataflowService returns the service connection for GCP Dataflow service
+func DataflowService(ctx context.Context, d *plugin.QueryData) (*dataflow.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "DataflowService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*dataflow.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := dataflow.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}
