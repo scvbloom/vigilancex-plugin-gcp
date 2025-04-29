@@ -9,6 +9,7 @@ import (
 	"github.com/turbot/steampipe-plugin-sdk/v5/plugin"
 	"google.golang.org/api/accessapproval/v1"
 	"google.golang.org/api/alloydb/v1"
+	"google.golang.org/api/apigee/v1"
 	"google.golang.org/api/apikeys/v2"
 	"google.golang.org/api/appengine/v1"
 	"google.golang.org/api/artifactregistry/v1"
@@ -17,30 +18,41 @@ import (
 	"google.golang.org/api/billingbudgets/v1"
 	"google.golang.org/api/cloudasset/v1"
 	"google.golang.org/api/cloudbilling/v1"
+	"google.golang.org/api/cloudbuild/v1"
 	"google.golang.org/api/cloudfunctions/v2"
 	"google.golang.org/api/cloudidentity/v1"
 	"google.golang.org/api/cloudkms/v1"
 	"google.golang.org/api/cloudresourcemanager/v1"
+	"google.golang.org/api/cloudtrace/v1"
 	"google.golang.org/api/composer/v1"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/container/v1"
+	"google.golang.org/api/datafusion/v1"
+	dataflow "google.golang.org/api/dataflow/v1b3"
 	"google.golang.org/api/dataplex/v1"
 	"google.golang.org/api/dataproc/v1"
+	"google.golang.org/api/datastream/v1"
 	"google.golang.org/api/dns/v1"
+	"google.golang.org/api/documentai/v1"
 	"google.golang.org/api/essentialcontacts/v1"
+	"google.golang.org/api/file/v1"
 	"google.golang.org/api/firestore/v1"
 	"google.golang.org/api/iam/v1"
 	"google.golang.org/api/logging/v2"
 	"google.golang.org/api/metastore/v1"
 	"google.golang.org/api/monitoring/v3"
+	"google.golang.org/api/notebooks/v1"
 	"google.golang.org/api/option"
+	"google.golang.org/api/privateca/v1"
 	"google.golang.org/api/pubsub/v1"
 	run1 "google.golang.org/api/run/v1"
 	"google.golang.org/api/run/v2"
 	"google.golang.org/api/secretmanager/v1"
+	"google.golang.org/api/securitycenter/v1"
 	"google.golang.org/api/serviceusage/v1"
 	"google.golang.org/api/storage/v1"
 	"google.golang.org/api/vpcaccess/v1"
+	"google.golang.org/api/workstations/v1"
 
 	computeBeta "google.golang.org/api/compute/v0.beta"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
@@ -890,6 +902,279 @@ func VPCAccessService(ctx context.Context, d *plugin.QueryData) (*vpcaccess.Serv
 
 	// so it was not in cache - create service
 	svc, err := vpcaccess.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+func NotebookService(ctx context.Context, d *plugin.QueryData) (*notebooks.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "NotebooksService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*notebooks.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := notebooks.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+func GetProjectID(ctx context.Context, d *plugin.QueryData) (*compute.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "GetProjectID"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*compute.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := compute.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+func FilestoreService(ctx context.Context, d *plugin.QueryData) (*file.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "FilestoreService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*file.Service), nil
+	}
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+	// so it was not in cache - create service
+	svc, err := file.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// SecurityCenterService returns the service connection for GCP Security Command Center service
+func SecurityCenterService(ctx context.Context, d *plugin.QueryData) (*securitycenter.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "SecurityCenterService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*securitycenter.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := securitycenter.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// WorkstationsService returns the service connection for GCP Workstations service
+func WorkstationsService(ctx context.Context, d *plugin.QueryData) (*workstations.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "WorkstationsService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*workstations.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := workstations.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// DatastreamService returns the service connection for GCP Datastream service
+func DatastreamService(ctx context.Context, d *plugin.QueryData) (*datastream.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "DatastreamService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*datastream.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := datastream.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// CloudTraceService returns the service connection for GCP Cloud Trace service
+func CloudTraceService(ctx context.Context, d *plugin.QueryData) (*cloudtrace.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "CloudTraceService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*cloudtrace.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := cloudtrace.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// DataFusionService returns the service connection for GCP Data Fusion service
+func DataFusionService(ctx context.Context, d *plugin.QueryData) (*datafusion.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "DataFusionService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*datafusion.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := datafusion.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// CloudBuildService returns the service connection for GCP Cloud Build service
+func CloudBuildService(ctx context.Context, d *plugin.QueryData) (*cloudbuild.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "CloudBuildService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*cloudbuild.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := cloudbuild.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// ApigeeService returns the service connection for GCP Apigee service
+func ApigeeService(ctx context.Context, d *plugin.QueryData) (*apigee.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "ApigeeService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*apigee.Service), nil
+	}
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+	// so it was not in cache - create service
+	svc, err := apigee.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+// PrivateCAService returns the service connection for GCP Certificate Authority (Private CA) service
+func PrivateCAService(ctx context.Context, d *plugin.QueryData) (*privateca.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "PrivateCAService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*privateca.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := privateca.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+
+// DataflowService returns the service connection for GCP Dataflow service
+func DataflowService(ctx context.Context, d *plugin.QueryData) (*dataflow.Service, error) {
+	// have we already created and cached the service?
+	serviceCacheKey := "DataflowService"
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*dataflow.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+
+	// so it was not in cache - create service
+	svc, err := dataflow.NewService(ctx, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	d.ConnectionManager.Cache.Set(serviceCacheKey, svc)
+	return svc, nil
+}
+
+
+// DocumentAIService returns the service connection for GCP Document AI service
+// It may require specifying regional endpoints when creating the service client as shown in:
+// https://pkg.go.dev/cloud.google.com/go#hdr-Client_Options
+func DocumentAIService(ctx context.Context, d *plugin.QueryData) (*documentai.Service, error) {
+	// have we already created and cached the service?
+	matrixLocation := d.EqualsQualString(matrixKeyLocation)
+
+	serviceCacheKey := "DocumentAIService" + matrixLocation 
+	if cachedData, ok := d.ConnectionManager.Cache.Get(serviceCacheKey); ok {
+		return cachedData.(*documentai.Service), nil
+	}
+
+	// To get config arguments from plugin config file
+	opts := setSessionConfig(ctx, d.Connection)
+	if matrixLocation != "" {
+		opts = append(opts, option.WithEndpoint(matrixLocation+"-documentai.googleapis.com:443"))
+		plugin.Logger(ctx).Error("BuildingDocumentAIService", matrixLocation+"-documentai.googleapis.com:443")
+	}
+	// so it was not in cache - create service
+	svc, err := documentai.NewService(ctx, opts...)
 	if err != nil {
 		return nil, err
 	}

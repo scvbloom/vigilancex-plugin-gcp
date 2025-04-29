@@ -2,8 +2,6 @@ package gcp
 
 import (
 	"context"
-	"encoding/json"
-	"time"
 
 	"github.com/turbot/go-kit/types"
 	"github.com/turbot/steampipe-plugin-sdk/v5/grpc/proto"
@@ -15,28 +13,16 @@ import (
 
 //// TABLE DEFINITION
 
-func tableGcpLoggingLogEntry(_ context.Context) *plugin.Table {
+func tableGcpLoggingAuditAuditLogEntry(_ context.Context) *plugin.Table {
 	return &plugin.Table{
-		Name:        "gcp_logging_log_entry",
-		Description: "GCP Logging Log Entry",
+		Name:        "gcp_logging_audit_log_entry",
+		Description: "GCP Logging Audit Log Entry",
 		Get: &plugin.GetConfig{
 			KeyColumns: plugin.SingleColumn("insert_id"),
 			Hydrate:    getGcpLoggingLogEntry,
 		},
 		List: &plugin.ListConfig{
-			Hydrate: listGcpLoggingLogEntries,
-			KeyColumns: plugin.KeyColumnSlice{
-				{Name: "resource_type", Require: plugin.Optional},
-				{Name: "severity", Require: plugin.Optional},
-				{Name: "log_name", Require: plugin.Optional},
-				{Name: "span_id", Require: plugin.Optional},
-				{Name: "text_payload", Require: plugin.Optional},
-				{Name: "receive_timestamp", Require: plugin.Optional, Operators: []string{"=", ">", "<", ">=", "<="}},
-				{Name: "timestamp", Require: plugin.Optional, Operators: []string{"=", ">", "<", ">=", "<="}},
-				{Name: "trace", Require: plugin.Optional},
-				{Name: "operation_id", Require: plugin.Optional},
-				{Name: "filter", Require: plugin.Optional, CacheMatch: "exact"},
-			},
+			Hydrate: listGcpLoggingAuditLogEntries,
 		},
 		Columns: []*plugin.Column{
 			{
@@ -126,7 +112,7 @@ func tableGcpLoggingLogEntry(_ context.Context) *plugin.Table {
 			},
 			{
 				Name:        "split",
-				Description: "Information indicating this LogEntry is part of a sequence of multiple log entries split from a single LogEntry.",
+				Description: "Information indicating this AuditLogEntry is part of a sequence of multiple log entries split from a single AuditLogEntry.",
 				Type:        proto.ColumnType_JSON,
 			},
 			{
@@ -179,11 +165,11 @@ func tableGcpLoggingLogEntry(_ context.Context) *plugin.Table {
 
 //// FETCH FUNCTIONS
 
-func listGcpLoggingLogEntries(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
+func listGcpLoggingAuditLogEntries(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
 	// Create Service Connection
 	service, err := LoggingService(ctx, d)
 	if err != nil {
-		plugin.Logger(ctx).Error("gcp_logging_log_entry.listGcpLoggingLogEntries", "service_error", err)
+		plugin.Logger(ctx).Error("gcp_logging_audit_log_entry.listGcpLoggingAuditLogEntries", "service_error", err)
 		return nil, err
 	}
 
@@ -209,18 +195,7 @@ func listGcpLoggingLogEntries(ctx context.Context, d *plugin.QueryData, h *plugi
 	param := &logging.ListLogEntriesRequest{
 		PageSize:      *pageSize,
 		ResourceNames: []string{"projects/" + project},
-	}
-
-	filter := ""
-
-	if d.EqualsQualString("filter") != "" {
-		filter = d.EqualsQualString("filter")
-	} else {
-		filter = buildLoggingLogEntryFilterParam(d.Quals)
-	}
-
-	if filter != "" {
-		param.Filter = filter
+		Filter:        "logName : projects/" + project + "/logs/cloudaudit.googleapis.com",
 	}
 
 	op := service.Entries.List(param)
@@ -241,165 +216,9 @@ func listGcpLoggingLogEntries(ctx context.Context, d *plugin.QueryData, h *plugi
 			return nil
 		},
 	); err != nil {
-		plugin.Logger(ctx).Error("gcp_logging_log_entry.listGcpLoggingLogEntries", "api_error", err)
+		plugin.Logger(ctx).Error("gcp_logging_audit_log_entry.listGcpLoggingAuditLogEntries", "api_error", err)
 		return nil, err
 	}
 
 	return nil, err
-}
-
-//// HYDRATE FUNCTION
-
-func getGcpLoggingLogEntry(ctx context.Context, d *plugin.QueryData, h *plugin.HydrateData) (interface{}, error) {
-	// Create Service Connection
-	service, err := LoggingService(ctx, d)
-	if err != nil {
-		plugin.Logger(ctx).Error("gcp_logging_log_entry.getGcpLoggingLogEntry", "service_error", err)
-		return nil, err
-	}
-
-	// Get project details
-
-	projectId, err := getProject(ctx, d, h)
-	if err != nil {
-		return nil, err
-	}
-	project := projectId.(string)
-
-	param := &logging.ListLogEntriesRequest{
-		ResourceNames: []string{"projects/" + project},
-	}
-
-	insertId := d.EqualsQualString("insert_id")
-	filter := ""
-
-	if insertId != "" {
-		filter = "insertId" + " = \"" + insertId + "\""
-	}
-	param.Filter = filter
-
-	op, err := service.Entries.List(param).Do()
-
-	if err != nil {
-		plugin.Logger(ctx).Error("gcp_logging_log_entry.getGcpLoggingLogEntry", "api_error", err)
-		return nil, err
-	}
-
-	if len(op.Entries) > 0 {
-		return op.Entries[0], nil
-	}
-
-	return nil, nil
-}
-
-//// UTILITY FUNCTION
-
-func buildLoggingLogEntryFilterParam(equalQuals plugin.KeyColumnQualMap) string {
-	filter := ""
-
-	filterQuals := []filterQualMap{
-		{"resource_type", "resource.type", "string"},
-		{"severity", "severity", "string"},
-		{"log_name", "logName", "string"},
-		{"span_id", "spanId", "string"},
-		{"text_payload", "textPayload", "string"},
-		{"trace", "trace", "string"},
-		{"operation_id", "operation.id", "string"},
-		{"receive_timestamp", "receiveTimestamp", "timestamp"},
-		{"timestamp", "timestamp", "timestamp"},
-	}
-
-	for _, filterQualItem := range filterQuals {
-		filterQual := equalQuals[filterQualItem.ColumnName]
-		if filterQual == nil {
-			continue
-		}
-
-		// Check only if filter qual map matches with optional column name
-		if filterQual.Name == filterQualItem.ColumnName {
-			if filterQual.Quals == nil {
-				continue
-			}
-		}
-
-		for _, qual := range filterQual.Quals {
-			if qual.Value != nil {
-				value := qual.Value
-				switch filterQualItem.Type {
-				case "string":
-					if filter == "" {
-						filter = filterQualItem.PropertyPath + " = \"" + value.GetStringValue() + "\""
-					} else {
-						filter = filter + " AND " + filterQualItem.PropertyPath + " = \"" + value.GetStringValue() + "\""
-					}
-				case "timestamp":
-					propertyPath := filterQualItem.PropertyPath
-					if filter == "" {
-						switch qual.Operator {
-						case "=":
-							filter = propertyPath + " = \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case ">":
-							filter = propertyPath + " > \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case "<":
-							filter = propertyPath + " < \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case ">=":
-							filter = propertyPath + " >= \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case "<=":
-							filter = propertyPath + " <= \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						}
-					} else {
-						switch qual.Operator {
-						case "=":
-							filter = filter + " AND " + propertyPath + " = \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case ">":
-							filter = filter + " AND " + propertyPath + " > \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case "<":
-							filter = filter + " AND " + propertyPath + " < \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case ">=":
-							filter = filter + " AND " + propertyPath + " >= \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						case "<=":
-							filter = filter + " AND " + propertyPath + " <= \"" + value.GetTimestampValue().AsTime().Format(time.RFC3339) + "\""
-						}
-					}
-				}
-			}
-		}
-	}
-	return filter
-}
-
-//// TRANSFORM FUNCTION
-
-func covertLogEntryByteArrayToJsonObject(ctx context.Context, d *transform.TransformData) (interface{}, error) {
-	entry := d.HydrateItem.(*logging.LogEntry)
-	param := d.Param.(string)
-
-	var protoPlayload interface{}
-	var jsonPayload interface{}
-
-	a, err := entry.ProtoPayload.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-	b, err := entry.JsonPayload.MarshalJSON()
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(a, &protoPlayload)
-	if err != nil {
-		plugin.Logger(ctx).Error("gcp_logging_log_entry.covertLogEntryByteArrayToJsonObject.protoPlayload", err)
-	}
-
-	err = json.Unmarshal(b, &jsonPayload)
-	if err != nil {
-		plugin.Logger(ctx).Error("gcp_logging_log_entry.covertLogEntryByteArrayToJsonObject.jsonPayload", err)
-	}
-
-	payload := map[string]interface{}{
-		"JsonPayload":  jsonPayload,
-		"ProtoPayload": protoPlayload,
-	}
-
-	return payload[param], nil
 }
