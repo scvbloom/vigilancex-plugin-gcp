@@ -203,6 +203,7 @@ func Plugin(ctx context.Context) *plugin.Plugin {
 			"gcp_certificate_authority_service":                       tableGcpCertificateAuthorityService(ctx),
 			"gcp_workstation_cluster":                                 tableGcpWorkstationCluster(ctx),
 			"gcp_dataflow_job":                                        tableGcpDataflowJob(ctx),
+			"gcp_logging_audit_log_entry":                             tableGcpLoggingAuditAuditLogEntry(ctx),
 			/*
 				https://github.com/turbot/steampipe/issues/108
 				"gcp_compute_route":                   tableGcpComputeRoute(ctx),
