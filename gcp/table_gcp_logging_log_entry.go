@@ -207,8 +207,8 @@ func listGcpLoggingLogEntries(ctx context.Context, d *plugin.QueryData, h *plugi
 	project := projectId.(string)
 
 	param := &logging.ListLogEntriesRequest{
-		PageSize:   *pageSize,
-		ProjectIds: []string{project},
+		PageSize:      *pageSize,
+		ResourceNames: []string{"projects/" + project},
 	}
 
 	filter := ""
@@ -267,7 +267,7 @@ func getGcpLoggingLogEntry(ctx context.Context, d *plugin.QueryData, h *plugin.H
 	project := projectId.(string)
 
 	param := &logging.ListLogEntriesRequest{
-		ProjectIds: []string{project},
+		ResourceNames: []string{"projects/" + project},
 	}
 
 	insertId := d.EqualsQualString("insert_id")
